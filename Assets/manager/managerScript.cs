@@ -1,20 +1,22 @@
+using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 
 public class manager : MonoBehaviour
 {
     public GameObject human;
-    public int alive = 0;
-    public int infected = 0;
-    public int dead = 0;
-    public int immune = 0;
+    public GameObject stats;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        int startHumans = 50;
+
+        int startHumans = 49;
         for (int i = 0; i < startHumans; i++)
         {
-            Instantiate(human);
+            float startPosX = Random.Range(-8.0f, 8.0f);
+            float startPosY = Random.Range(-4.0f, 4.0f);
+            Instantiate(human, new Vector3(startPosX, startPosY, 0), Quaternion.identity);
+            stats.GetComponent<statisticsManager>().healthyCount++;
         }
 
     }

@@ -48,8 +48,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 0.5
-  infectionChance: 0.3
+  infectionChance: 30
   incubationDuration: 5
+  stats: {fileID: 0}
+  human: {fileID: 6383337781597624081}
 --- !u!212 &6383337781597624081
 SpriteRenderer:
   m_ObjectHideFlags: 0
