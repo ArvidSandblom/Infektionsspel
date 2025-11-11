@@ -3,10 +3,10 @@ using UnityEngine;
 
 public class humanBehaviour : MonoBehaviour
 {
-    public float speed = 0.5f;
+    public float speed = 1f;
     public int infectionChance = 30;
-    public float incubationDuration = 5.0f;
-    private string currentStatus = "Healthy";
+    public float incubationDuration = 20f;
+    public string currentStatus = "Healthy";
     private bool isAlive = true;
     private float directionX;
     private float directionY;
@@ -17,6 +17,15 @@ public class humanBehaviour : MonoBehaviour
     void Awake()
     {
         stats = GameObject.Find("stats");
+        int infectionRoll = Random.Range(0, 101);
+        if (infectionRoll < 10)
+        {
+            currentStatus = "Infected";
+            human.color = Color.red;
+            stats.GetComponent<statisticsManager>().infectedCount++;
+            stats.GetComponent<statisticsManager>().healthyCount--;
+            StartCoroutine(DieOrImmune());
+        }
     }
     private void Start()
     {
@@ -56,7 +65,16 @@ public class humanBehaviour : MonoBehaviour
             {
                 directionY *= -1;
             }
-            transform.Translate(new Vector3(directionX, directionY, 0).normalized * speed * Time.deltaTime);
+            if (currentStatus == "Infected")//Move towards uninfected humans
+            {
+                speed = 2f;
+            }
+            else
+            {
+                speed = 1f;
+            }
+
+                transform.Translate(new Vector3(directionX, directionY, 0).normalized * speed * Time.deltaTime);
 
         }
     }
@@ -68,9 +86,9 @@ public class humanBehaviour : MonoBehaviour
             if (humanCollision == isAlive)
             {                
                 changeDirection();                                    
-                reproduce(currentStatus, humanCollision.gameObject.GetComponent<humanBehaviour>().currentStatus);
+                //reproduce(currentStatus, humanCollision.gameObject.GetComponent<humanBehaviour>().currentStatus);
 
-                if(humanCollision.GetComponent<humanBehaviour>().currentStatus == "Infected")
+                if(humanCollision.GetComponent<humanBehaviour>().currentStatus == "Infected" && currentStatus == "Healthy")
                 {                    
                     infect();
                 }
@@ -128,7 +146,7 @@ public class humanBehaviour : MonoBehaviour
             StartCoroutine(DieOrImmune());
         }
 
-    }    
+    }
     void reproduce(string status1, string status2)
     {
         int reproduceChance = 25;
@@ -137,7 +155,7 @@ public class humanBehaviour : MonoBehaviour
             int reproduce = Random.Range(0, 101);
             if (reproduce < reproduceChance)
             {
-                
+
                 Instantiate(this.gameObject, new Vector3(0, -0.5f, 0), Quaternion.identity);
             }
         }
@@ -162,7 +180,7 @@ public class humanBehaviour : MonoBehaviour
             if (outcome < immunityChance)
             {
                 currentStatus = "Immune";
-                human.color = Color.green;
+                human.color = Color.green;            
                 stats.GetComponent<statisticsManager>().immuneCount++;
                 stats.GetComponent<statisticsManager>().infectedCount--;
                 yield return null;

@@ -49,7 +49,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 0.5
   infectionChance: 30
-  incubationDuration: 5
+  incubationDuration: 20
+  currentStatus: Healthy
   stats: {fileID: 0}
   human: {fileID: 6383337781597624081}
 --- !u!212 &6383337781597624081
