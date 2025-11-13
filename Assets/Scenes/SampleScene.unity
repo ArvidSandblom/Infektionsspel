@@ -749,6 +749,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   human: {fileID: 8483200774718299654, guid: 100546dafcfd7dd4aae60292d94f470e, type: 3}
+  factory: {fileID: 8947547985875315840, guid: 36dc41a005d9ced4fa2b5ed8a77bcd71, type: 3}
   stats: {fileID: 1140466100}
   initialPopulation: 100
 --- !u!224 &1287919455
