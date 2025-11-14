@@ -4,7 +4,7 @@ using UnityEngine;
 public class humanBehaviour : MonoBehaviour
 {
     public float speed = 1f;
-    public int infectionChance = 30;
+    public int infectionChance = 60;
     public float incubationDuration = 20f;
     public string currentStatus = "Healthy";
     private bool isAlive = true;
@@ -15,9 +15,10 @@ public class humanBehaviour : MonoBehaviour
     public SpriteRenderer human;
     private bool atFactory = false;
     private bool movingToFactory = false;
+    Vector3[] factoryPositions;
 
     void Awake()
-    {
+    {        
         stats = GameObject.Find("stats");
         int infectionRoll = Random.Range(0, 101);
         if (infectionRoll < 10)
@@ -34,6 +35,10 @@ public class humanBehaviour : MonoBehaviour
         directionX = Random.Range(-1, 2);
         directionY = Random.Range(-1, 2);
         StartCoroutine(workwork());
+        factoryPositions = new Vector3[]
+        {
+            
+        };
     }
 
     // Update is called once per frame
@@ -133,8 +138,7 @@ public class humanBehaviour : MonoBehaviour
             yield return new WaitForSeconds(15f);
 
             Transform factory = getNearestFactory();
-            if (factory == null)
-                yield break; 
+            if (factory == null) yield break; 
 
             movingToFactory = true;
             speed = 2f;
@@ -210,37 +214,7 @@ public class humanBehaviour : MonoBehaviour
         return nearest;
     }
 
-}
-
-
-    /*void changeDirection2(Vector3 myPos, Vector3 otherPos, bool status)//status = isAlive (Om de är döda ska de inte ändra riktning) || Lite osäker på denna, kan behöva justeras eller bytas men detta i framtid
-    {
-        //Hitta avståndet mellan de två objekten
-        Vector2 distance = myPos - otherPos;
-        if (status == false)
-        {
-
-            if (distance == Vector2.zero)
-            {
-                //Om de är på exakt samma position välj en slumpmässig riktning
-                distance = Random.insideUnitCircle.normalized;
-            }
-            else
-            {
-                distance = distance.normalized;
-            }
-
-            //Lägg till en liten slumpmässig marginal för att undvika exakt motsatt riktning för bättre spridning
-            Vector2 marginal = Random.insideUnitCircle.normalized * 0.2f;
-            Vector2 newDirection = (distance + marginal).normalized;
-
-            directionX = newDirection.x;
-            directionY = newDirection.y;
-
-            float separationDistance = 0.05f; // Justera detta värde efter behov
-            transform.position = myPos + (Vector3)(newDirection * separationDistance); //Skapa lite avstånd för att undvika att de fastnar ihop
-        }
-    }*/
+}    
     /*void reproduce(string status1, string status2)
     {
         int reproduceChance = 25;
