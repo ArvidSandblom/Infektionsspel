@@ -8,14 +8,15 @@ public class humanBehaviour : MonoBehaviour
     public float incubationDuration = 20f;
     public string currentStatus = "Healthy";
     private bool isAlive = true;
+    private bool canCollide = true;
     private float directionX;
     private float directionY;
-    private float changeDirectionInterval = 2.0f;
     public GameObject stats;
     public SpriteRenderer human;
-    private bool atFactory = false;
-    private bool movingToFactory = false;
-    Vector3[] factoryPositions;
+    private bool isSafe = false;
+    float wanderTimer = 0f;
+    private BoxCollider2D boxCollider;
+
 
     void Awake()
     {        
@@ -32,80 +33,62 @@ public class humanBehaviour : MonoBehaviour
     }
     private void Start()
     {
+        boxCollider = GetComponent<BoxCollider2D>();
         directionX = Random.Range(-1, 2);
         directionY = Random.Range(-1, 2);
-        StartCoroutine(workwork());
-        factoryPositions = new Vector3[]
-        {
-            
-        };
+        StartCoroutine(workwork());        
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!atFactory || !movingToFactory)
+        if (!isAlive || isSafe) return; 
+
+        wanderTimer -= Time.deltaTime;
+       
+        
+        if (wanderTimer <= 0)
         {
-            changeDirectionInterval -= Time.deltaTime;
-            if (changeDirectionInterval <= 0)
-            {
-                directionX = Random.Range(-1, 2);
-                directionY = Random.Range(-1, 2);
-                changeDirectionInterval = 2.0f; // Reset interval | Ändra vid behov
-            }
+            SetRandomDirection();
+            wanderTimer = Random.Range(1f, 3f);
         }
 
-            if (isAlive)
-            {
-                //Rörelse
+        MoveInBounds();
 
-                if (transform.position.x >= 8.5f && directionX > 0)
-                {
-                    directionX *= -1;
-                }
-                if (transform.position.x <= -8.5f && directionX < 0)
-                {
-                    directionX *= -1;
-                }
-                if (transform.position.y >= 4.5f && directionY > 0)
-                {
-                    directionY *= -1;
-                }
-                if (transform.position.y <= -4.5f && directionY < 0)
-                {
-                    directionY *= -1;
-                }
-               /* if (currentStatus == "Infected")//Move towards uninfected humans
-                {
-                    speed = 2f;
-                }
-                else
-                {
-                    speed = 1f;
-                }*/
-
-                transform.Translate(new Vector3(directionX, directionY, 0).normalized * speed * Time.deltaTime);
-
-            }
         
+
     }
     void OnTriggerEnter2D(Collider2D humanCollision)
     {
-        if (humanCollision.gameObject.tag == "Human" && !movingToFactory || !atFactory)
+        if (humanCollision.gameObject.tag == "Human" && !isSafe)
         {
-            //Behåll transform position för att nyttja i changeDirection
+
             if (humanCollision == isAlive)
             {                
                 changeDirection();                                    
-                /*if (humanCollision.gameObject.GetComponent<humanBehaviour>().isAlive)
-                reproduce(currentStatus, humanCollision.gameObject.GetComponent<humanBehaviour>().currentStatus);*/
 
-                if(humanCollision.GetComponent<humanBehaviour>().currentStatus == "Infected" && currentStatus == "Healthy")
+
+                if(humanCollision.GetComponent<humanBehaviour>().currentStatus == "Infected" && currentStatus == "Healthy" && !canCollide)
                 {                    
                     infect();
                 }
             }
         }
+    }
+    void SetRandomDirection()
+    {
+        Vector2 dir = Random.insideUnitCircle.normalized;
+        directionX = dir.x;
+        directionY = dir.y;
+    }
+    void MoveInBounds()
+    {
+        Vector3 pos = transform.position;
+
+        if (pos.x > 8.5f || pos.x < -8.5f) directionX *= -1;
+        if (pos.y > 4.5f || pos.y < -4.5f) directionY *= -1;
+
+        transform.Translate(new Vector3(directionX, directionY) * speed * Time.deltaTime);
     }
 
 
@@ -121,7 +104,7 @@ public class humanBehaviour : MonoBehaviour
     void infect()
     {
         float infect = Random.Range(0, 101);
-        if (infect < infectionChance)
+        if (infect < infectionChance && !isSafe)
         {
             currentStatus = "Infected";
             stats.GetComponent<statisticsManager>().infectedCount++;
@@ -135,13 +118,21 @@ public class humanBehaviour : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(15f);
+
+            
+            if (!isAlive) yield break;
+            yield return new WaitForSeconds(15f); //ändra till 15 efter testning
+            Vector3 previousPos = transform.position;
 
             Transform factory = getNearestFactory();
             if (factory == null) yield break; 
-
-            movingToFactory = true;
+            
+            boxCollider.enabled = false;
+            canCollide = false;
+            isSafe = true;
             speed = 2f;
+
+            
 
             Vector3 targetPos = factory.position + new Vector3(Random.Range(-0.5f, 0.5f), Random.Range(-0.5f, 0.5f), 0);
             while (Vector3.Distance(transform.position, targetPos) > 0.1f)
@@ -151,21 +142,53 @@ public class humanBehaviour : MonoBehaviour
                 yield return null;
             }
            
-            atFactory = true;
-            movingToFactory = false;
-            isAlive = false;
 
-            yield return new WaitForSeconds(5f);
+            yield return new WaitForSeconds(3f);
 
-            
-            isAlive = true;
-            atFactory = false;
-            movingToFactory = false;
+            int infectRoll = Random.Range(0, 101);
+            if (infectRoll < 15 && currentStatus == "Healthy")
+            {
+                currentStatus = "Infected";
+                human.color = Color.red;
+                stats.GetComponent<statisticsManager>().infectedCount++;
+                stats.GetComponent<statisticsManager>().healthyCount--;
+                StartCoroutine(DieOrImmune());
+            }
+
+
+
+            transform.position = Vector3.MoveTowards(transform.position, previousPos, speed * Time.deltaTime);
+            if (Vector3.Distance(transform.position, previousPos) < 0.1f)
+            {
+                SetRandomDirection();
+            }
+
+            yield return new WaitForSeconds(4f);
             speed = 1f;
-            directionX = Random.Range(-1, 2);
-            directionY = Random.Range(-1, 2);
+            boxCollider.enabled = true;
+            isSafe = false;
+            canCollide = true;
         }
     }    
+    Transform getNearestFactory()
+    {
+        GameObject[] factories = GameObject.FindGameObjectsWithTag("factory");
+        Transform nearest = null;
+        float minDistance = Mathf.Infinity;
+        Vector3 currentPos = transform.position;
+
+        foreach (GameObject f in factories)
+        {
+            float dist = Vector3.Distance(currentPos, f.transform.position);
+            if (dist < minDistance)
+            {
+                minDistance = dist;
+                nearest = f.transform;
+            }
+        }
+
+        return nearest;
+    }
     IEnumerator DieOrImmune()
     {
         int immunityChance = 20;
@@ -194,50 +217,5 @@ public class humanBehaviour : MonoBehaviour
 
         }
     }
-    Transform getNearestFactory()
-    {
-        GameObject[] factories = GameObject.FindGameObjectsWithTag("Factory");
-        Transform nearest = null;
-        float minDistance = Mathf.Infinity;
-        Vector3 currentPos = transform.position;
 
-        foreach (GameObject f in factories)
-        {
-            float dist = Vector3.Distance(currentPos, f.transform.position);
-            if (dist < minDistance)
-            {
-                minDistance = dist;
-                nearest = f.transform;
-            }
-        }
-
-        return nearest;
-    }
-
-}    
-    /*void reproduce(string status1, string status2)
-    {
-        int reproduceChance = 25;
-        if (isAlive && status1 == "Healthy" && status2 == "Healthy")
-        {
-            int reproduce = Random.Range(0, 101);
-            if (reproduce < reproduceChance)
-            {
-
-                Instantiate(this.gameObject, new Vector3(0, -0.5f, 0), Quaternion.identity);
-                StartCoroutine(addDelay(20));
-
-            }
-        }
-        else if (isAlive && status1 == "Immune" || status1 == "Healthy" && status2 == "Immune" || status2 == "Healthy")
-        {
-            int reproduce = Random.Range(0, 101);
-            if (reproduce < reproduceChance)
-            {
-                GameObject newHuman = Instantiate(this.gameObject, new Vector3(0, -0.5f, 0), Quaternion.identity);
-                newHuman.GetComponent<humanBehaviour>().currentStatus = "Immune";
-                StartCoroutine(addDelay(20));
-
-            }
-        }
-    }*/
+}

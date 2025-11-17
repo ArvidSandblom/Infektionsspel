@@ -8,26 +8,23 @@ public class manager : MonoBehaviour
     public GameObject stats;
     public int initialPopulation = 50;
     public int factoryCount = 4;
-    public Vector3[] factoryPositions;
-    public Vector3 factoryPlacementDirection = ();
+    private Vector3 basePos;
+    
+    public Vector3 factoryPlacementDirection;    
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        for (int i = 0; i < factoryCount; i++)//spawn factories at random positions after rotating 90 degrees
+
+        for (int i = 0; i < factoryCount; i++)
         {
-            
+            basePos = new Vector3(Random.Range(3.5f, 6f), Random.Range(1f ,-1f), 0);
+            float angle = i * (360f / factoryCount);
+            Quaternion rot = Quaternion.Euler(0, 0, angle - 45f);
+            Vector3 pos = rot * basePos;
+
+            Instantiate(factory, pos, Quaternion.identity);
         }
 
-
-        Vector3 factoryPlacementDirection;
-        Instantiate(factory, new Vector3(Random.Range(4f, 5f), Random.Range(3.5f, 2.5f), 0), Quaternion.identity);
-        Instantiate(factory, new Vector3(Random.Range(0.5f, -0.5f), Random.Range(2.5f, 3.5f), 0), Quaternion.identity);
-        Instantiate(factory, new Vector3(Random.Range(-4f, -5f), Random.Range(3.5f, 2.5f), 0), Quaternion.identity);
-        Instantiate(factory, new Vector3(Random.Range(-4f, -5f), Random.Range(0.5f, 1f), 0), Quaternion.identity);
-        Instantiate(factory, new Vector3(Random.Range(4f, 5f), Random.Range(-3.5f, -2.5f), 0), Quaternion.identity);
-        Instantiate(factory, new Vector3(Random.Range(-0.5f, 0.5f), Random.Range(-3.5f, -2.5f), 0), Quaternion.identity);
-        Instantiate(factory, new Vector3(Random.Range(-4f, -5f), Random.Range(-3.5f, -2.5f), 0), Quaternion.identity);
-        Instantiate(factory, new Vector3(Random.Range(4f, 5f), Random.Range(-0.5f, 0.5f), 0), Quaternion.identity);
         for (int i = 0; i < initialPopulation; i++)
         {
             float startPosX = Random.Range(-8.0f, 8.0f);
